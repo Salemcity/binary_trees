@@ -1,61 +1,121 @@
 #include "binary_trees.h"
 
+int recurse_for_is_bst(const binary_tree_t *tree, int min, int max);
+size_t recurse_for_height(const binary_tree_t *tree);
+int binary_tree_balance(const binary_tree_t *tree);
+size_t binary_tree_height(const binary_tree_t *tree);
+int recurse_for_balance(const binary_tree_t *tree);
 /**
- * binary_tree_is_avl - functions that finds if a binary tree is an avl
- * @tree: pointer to the root node of the tree
- * Return: 1 if tree is avl
- *         0 otherwise
+ * binary_tree_is_avl - check if tree is AVL
+ * @tree: pointer to root of tree.
+ * Return: 1 if valid AVL; 0 if not
  */
 int binary_tree_is_avl(const binary_tree_t *tree)
 {
+	int balanced;
+
 	if (!tree)
 		return (0);
 
-	return (btia_helper(tree, INT_MIN, INT_MAX));
+	/* check if tree is ordered */
+	if (recurse_for_is_bst(tree, INT_MIN, INT_MAX) == 1)
+	{
+		/* determine balance factor */
+		balanced = recurse_for_balance(tree); /* 0: balanced; 1: unbalanced */
+		if (balanced == 0)
+			return (1); /* tree is AVL */
+	}
+	/* tree is not AVL */
+	return (0);
 }
-
 /**
- * btia_helper - helper that finds if a binary tree is an avl
- * @tree: pointer to the root node of the tree
- * @min: minimum value
- * @max: maximum value
- * Return: 1 if tree is avl
- *         0 otherwise
+ * recurse_for_balance - utility for checking tree and subtrees
+ * @tree: pointer to root of tree
+ * Return: balance factor
  */
-int btia_helper(const binary_tree_t *tree, int min, int max)
+int recurse_for_balance(const binary_tree_t *tree)
 {
-	int path_l, path_r;
+	int balFactor;
 
 	if (!tree)
+		return (0);
+
+	/* take balance factor of every tree/subtree */
+	balFactor = binary_tree_balance(tree);
+
+	if (balFactor < -1 || balFactor > 1)
+		return (balFactor);
+
+	return (recurse_for_balance(tree->left) || recurse_for_balance(tree->right));
+}
+/**
+ * binary_tree_balance - measures the balance factor of a binary tree
+ * @tree: pointer to node to measure the balance factor
+ * Description: 14. Balance factor
+ * Return: see below
+ * 1. upon success, return balance factor
+ * 2. upon fail, return 0
+ */
+int binary_tree_balance(const binary_tree_t *tree)
+{
+	/* declare and initialize variables to calculate the heights */
+	int left = 0;
+	int right = 0;
+
+	/* base case */
+	if (tree == NULL)
+	{
+		return (0);
+	}
+
+	/* if given node has no balance factor */
+	if ((tree->left == NULL) && (tree->right == NULL))
+	{
+		return (0);
+	}
+
+	/* calculate height of left and right subtrees */
+	left = recurse_for_height(tree->left) - 1;
+	right = recurse_for_height(tree->right) - 1;
+
+	/* balance factor = left height - right height */
+	return (left - right);
+}
+/**
+ * recurse_for_height - measure height
+ * @tree: tree to measure.
+ * Return: height
+ */
+size_t recurse_for_height(const binary_tree_t *tree)
+{
+	size_t heightR, heightL;
+
+	if (!tree)
+		return (0);
+
+	heightL = recurse_for_height(tree->left);
+	heightR = recurse_for_height(tree->right);
+
+	if (heightL > heightR)
+		return (heightL + 1);
+	else
+		return (heightR + 1);
+}
+/**
+ * recurse_for_is_bst - recursive check for BST
+ * @tree: pointer to root node
+ * @min: current minimum.
+ * @max: current maximum.
+ * Return: 1 if BST; 0 if not
+ */
+int recurse_for_is_bst(const binary_tree_t *tree, int min, int max)
+{
+	if (!tree) /* if either pointer is NULL */
 		return (1);
-	if (tree->n < min || tree->n > max)
+
+	if ((tree->n < min) || (tree->n > max))
 		return (0);
 
-	path_l = tree->left ? 1 + binary_tree_height(tree->left) : 0;
-	path_r = tree->right ? 1 + binary_tree_height(tree->right) : 0;
-
-	if (abs(path_l - path_r) > 1)
-		return (0);
-
-	return (btia_helper(tree->left, min, tree->n - 1) &&
-		btia_helper(tree->right, tree->n + 1, max));
-	/* This is part of the BST check logic */
-}
-
-/**
- * binary_tree_height - it measures the height of a binary tree
- * @tree: pointer to the root node of the tree to check
- * Return: 0 if tree is NULL
- */
-size_t binary_tree_height(const binary_tree_t *tree)
-{
-	size_t height_l = 0;
-	size_t height_r = 0;
-
-	if (!tree)
-		return (0);
-
-	height_l = tree->left ? 1 + binary_tree_height(tree->left) : 0;
-	height_r = tree->right ? 1 + binary_tree_height(tree->right) : 0;
-	return (height_l > height_r ? height_l : height_r);
+	return (recurse_for_is_bst(tree->left, min, tree->n - 1)
+		&& recurse_for_is_bst(tree->right, tree->n + 1, max));
 }

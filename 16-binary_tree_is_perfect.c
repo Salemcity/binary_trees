@@ -1,81 +1,95 @@
 #include "binary_trees.h"
 
+int binary_tree_balance(const binary_tree_t *tree);
+size_t recurse_for_height(const binary_tree_t *tree);
+int recurse_for_balance(const binary_tree_t *tree);
 /**
- * binary_tree_is_perfect - checks if a binary tree is perfect
- * @tree: a pointer to the root node of the tree to check
- *
- * Return: 1 if the tree is perfect
- *         0 if the tree is not perfect
- *         0 if tree is NULL
+ * binary_tree_is_perfect - checks for perfect binary tree
+ * @tree: pointer to the root node
+ * Description: 16. Is perfect
+ * Return: see below
+ * 1. upon success, return 1
+ * 2. upon fail, return 0
  */
 int binary_tree_is_perfect(const binary_tree_t *tree)
 {
-	size_t height = 0;
-	size_t nodes = 0;
-	size_t power = 0;
+	/* base case */
+	if (tree == NULL)
+		return (0);
+
+	/* check if all trees/subtrees have balance factor of 0 */
+	if (recurse_for_balance(tree) == 0)
+		return (1);
+	return (0);
+}
+/**
+ * recurse_for_balance - utility for checking tree and subtrees
+ * @tree: pointer to root of tree
+ * Return: balance factor
+ */
+int recurse_for_balance(const binary_tree_t *tree)
+{
+	int balFactor;
 
 	if (!tree)
 		return (0);
 
-	if (!tree->right && !tree->left)
-		return (1);
+	/* take balance factor of every tree/subtree */
+	balFactor = binary_tree_balance(tree);
 
-	height = binary_tree_height(tree);
-	nodes = binary_tree_size(tree);
+	if (balFactor != 0)
+		return (balFactor);
 
-	power = (size_t)_pow_recursion(2, height + 1);
-	return (power - 1 == nodes);
+	return (recurse_for_balance(tree->left) || recurse_for_balance(tree->right));
 }
-
 /**
- *_pow_recursion - returns the value of x raised to the power of y
- *@x: the value to exponentiate
- *@y: the power to raise x to
- *Return: x to the power of y, or -1 if y is negative
+ * binary_tree_balance - measures the balance factor of a binary tree
+ * @tree: pointer to node to measure the balance factor
+ * Description: 14. Balance factor
+ * Return: see below
+ * 1. upon success, return balance factor
+ * 2. upon fail, return 0
  */
-
-int _pow_recursion(int x, int y)
+int binary_tree_balance(const binary_tree_t *tree)
 {
-	if (y < 0)
-		return (-1);
-	if (y == 0)
-		return (1);
+	/* declare and initialize variables to calculate the heights */
+	int left = 0;
+	int right = 0;
+
+	/* base case */
+	if (tree == NULL)
+		return (0);
+
+	/* if given node has no balance factor */
+	if ((tree->left == NULL) && (tree->right == NULL))
+	{
+		return (0);
+	}
+
+	/* calculate height of left and right subtrees */
+	left = recurse_for_height(tree->left) - 1;
+	right = recurse_for_height(tree->right) - 1;
+
+	/* balance factor = left height - right height */
+	return (left - right);
+}
+/**
+ * recurse_for_height - measure height
+ * @tree: tree to measure
+ * Return: height
+ */
+size_t recurse_for_height(const binary_tree_t *tree)
+{
+	size_t heightR, heightL;
+
+	if (!tree)
+		return (0);
+
+	heightL = recurse_for_height(tree->left);
+	heightR = recurse_for_height(tree->right);
+
+	if (heightL > heightR)
+		return (heightL + 1);
 	else
-		return (x * _pow_recursion(x, y - 1));
-
-}
-
-/**
- * binary_tree_size - measures the size of a binary tree
- * @tree: tree to measure the size of
- *
- * Return: size of the tree
- *         0 if tree is NULL
- */
-size_t binary_tree_size(const binary_tree_t *tree)
-{
-	if (!tree)
-		return (0);
-
-	return (binary_tree_size(tree->left) + binary_tree_size(tree->right) + 1);
-}
-
-/**
- * binary_tree_height - measures the height of a binary tree
- * @tree: tree to measure the height of
- *
- * Return: height of the tree
- *         0 if tree is NULL
- */
-size_t binary_tree_height(const binary_tree_t *tree)
-{
-	size_t height_l = 0;
-	size_t height_r = 0;
-
-	if (!tree)
-		return (0);
-
-	height_l = tree->left ? 1 + binary_tree_height(tree->left) : 0;
-	height_r = tree->right ? 1 + binary_tree_height(tree->right) : 0;
-	return (height_l > height_r ? height_l : height_r);
+		return (heightR + 1);
 }
